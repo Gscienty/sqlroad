@@ -21,13 +21,20 @@ size_t sr_unicode_width(const sr_unicode_t code, const sr_encode_t et) {
 
 _Bool sr_unicode_is_space(const sr_unicode_t code) {
     static const sr_unicode_t space[] = { '\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xa0, 0x200e, 0x200f, 0x2028, 0x2029, 0x00 };
-
     int i;
     for (i = 0; space[i]; i++) {
         if (code == space[i]) {
             return 1;
         }
     }
+    return 0;
+}
+
+_Bool sr_unicode_is_alpha_numeric(const sr_unicode_t code) {
+    if (code == '_' || code == '$') {
+        return 1;
+    }
+
     return 0;
 }
 
