@@ -1,4 +1,5 @@
-#include  "alpha/unicode.h"
+#include "alpha/unicode.h"
+#include "alpha/tables.h"
 
 static size_t sr_utf8_width(const uint8_t first_byte);
 static size_t sr_unicode_utf8_at(const uint8_t *const raw, size_t off);
@@ -31,7 +32,7 @@ _Bool sr_unicode_is_space(const sr_unicode_t code) {
 }
 
 _Bool sr_unicode_is_alpha_numeric(const sr_unicode_t code) {
-    if (code == '_' || code == '$') {
+    if (code == '_' || code == '$' || sr_alpha_belong_to(sr_alpha_letter, code) || sr_alpha_belong_to(sr_alpha_digit, code)) {
         return 1;
     }
 

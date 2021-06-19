@@ -28,6 +28,7 @@ static sr_lexer_fn_t sr_lexer_process(sr_lexer_t *const lexer);
 static sr_lexer_fn_t sr_lexer_process_eof(sr_lexer_t *const lexer);
 static sr_lexer_fn_t sr_lexer_process_number(sr_lexer_t *const lexer);
 static sr_lexer_fn_t sr_lexer_process_dot(sr_lexer_t *const lexer);
+static sr_lexer_fn_t sr_lexer_process_identifier(sr_lexer_t *const lexer);
 static int sr_lexer_scan_string(sr_lexer_t *const lexer, const sr_unicode_t quote);
 static sr_unicode_t sr_lexer_scan_escape(sr_lexer_t *const lexer, const sr_unicode_t quote);
 
@@ -78,6 +79,11 @@ static sr_lexer_fn_t sr_lexer_process(sr_lexer_t *const lexer) {
         sr_lexer_prev_alpha(lexer);
 
         return (sr_lexer_fn_t) { .fn = sr_lexer_process_dot };
+    }
+    if (sr_unicode_is_alpha_numeric(alpha)) {
+        sr_lexer_prev_alpha(lexer);
+
+        return (sr_lexer_fn_t) { .fn = sr_lexer_process_identifier };
     }
 
 next_loop:
@@ -139,6 +145,22 @@ static sr_lexer_fn_t sr_lexer_process_dot(sr_lexer_t *const lexer) {
     }
 
     sr_lexer_product(lexer, sr_lexer_word(lexer), sr_token_operator);
+    return (sr_lexer_fn_t) { .fn = sr_lexer_process };
+}
+
+static sr_lexer_fn_t sr_lexer_process_identifier(sr_lexer_t *const lexer) {
+    for ( ;; ) {
+        sr_unicode_t alpha = sr_lexer_next_alpha(lexer);
+
+        if (!sr_unicode_is_alpha_numeric(alpha)) {
+            sr_lexer_prev_alpha(lexer);
+
+            sr_lexer_product(lexer, sr_lexer_word(lexer), sr_token_identity);
+
+            break;
+        }
+    }
+
     return (sr_lexer_fn_t) { .fn = sr_lexer_process };
 }
 

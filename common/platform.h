@@ -22,4 +22,8 @@ int sr_free(void *const ptr);
 #define sr_inline_static __header_always_inline
 #endif
 
+#ifdef __linux__
+#define sr_inline_static static inline
+#endif
+
 #endif
