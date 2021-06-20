@@ -31,6 +31,7 @@ static sr_lexer_fn_t sr_lexer_process_dot(sr_lexer_t *const lexer);
 static sr_lexer_fn_t sr_lexer_process_identifier(sr_lexer_t *const lexer);
 static int sr_lexer_scan_string(sr_lexer_t *const lexer, const sr_unicode_t quote);
 static sr_unicode_t sr_lexer_scan_escape(sr_lexer_t *const lexer, const sr_unicode_t quote);
+static _Bool sr_lexer_contains(const sr_unicode_t codes[], const sr_unicode_t alpha);
 
 int sr_lexer(sr_link_t *const tokens, sr_string_t *const source) {
     sr_lexer_t lexer = {
@@ -79,6 +80,22 @@ static sr_lexer_fn_t sr_lexer_process(sr_lexer_t *const lexer) {
         sr_lexer_prev_alpha(lexer);
 
         return (sr_lexer_fn_t) { .fn = sr_lexer_process_dot };
+    }
+    if (sr_lexer_contains((sr_unicode_t []) { '[', ']', '{', '}', '(', ')', sr_unicode_eof }, alpha)) {
+        sr_lexer_product(lexer, sr_lexer_word(lexer), sr_token_quote);
+        return (sr_lexer_fn_t) { .fn = sr_lexer_process };
+    }
+    if (sr_lexer_contains((sr_unicode_t []) { '+', '-', '*', '/', '%', '&', '|', '!', '=', '<', '>', ',', '^', sr_unicode_eof }, alpha)) {
+        switch (alpha) {
+        case '<':
+            sr_lexer_accept(lexer, (sr_unicode_t []) { '=', '>', sr_unicode_eof });
+            break;
+        case '>':
+            sr_lexer_accept(lexer, (sr_unicode_t []) { '=', sr_unicode_eof });
+            break;
+        }
+        sr_lexer_product(lexer, sr_lexer_word(lexer), sr_token_operator);
+        return (sr_lexer_fn_t) { .fn = sr_lexer_process };
     }
     if (sr_unicode_is_alpha_numeric(alpha)) {
         sr_lexer_prev_alpha(lexer);
@@ -271,4 +288,14 @@ sr_inline_static void sr_lexer_product(sr_lexer_t *const lexer, sr_string_t *wor
 
     lexer->start = lexer->end;
     lexer->start_pos = lexer->local_pos;
+}
+
+static _Bool sr_lexer_contains(const sr_unicode_t codes[], const sr_unicode_t alpha) {
+    int i = 0;
+    for (i = 0; codes[i] != sr_unicode_eof; i++) {
+        if (alpha == codes[i]) {
+            return 1;
+        }
+    }
+    return 0;
 }
